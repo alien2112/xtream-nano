@@ -1,11 +1,12 @@
 "use client";
 
-import Header from "@/components/Header";
+import Header from "@/components/Header"; // تأكد أن الملف Header.tsx موجود
+import Footer from "@/components/Footer"; // Footer.tsx موجود فعليًا
 import { Phone, Mail, MapPin, Instagram } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-export default function AboutLayout({ children }) {
+export default function AboutLayout({ children }: { children: React.ReactNode }) {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
@@ -44,7 +45,7 @@ export default function AboutLayout({ children }) {
               {/* Contact Icons */}
               <div className="flex gap-4 mb-6">
                 <motion.a
-                  href="tel:0570044578"
+                  href="tel:+966570044578"
                   className="bg-[#7F3F97] p-3 rounded-full hover:opacity-90 transition-all duration-300"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -69,14 +70,14 @@ export default function AboutLayout({ children }) {
                 </motion.a>
               </div>
 
-              {/* Social Media Icons */}
+              {/* Social Media */}
               <div className="text-[#e9cb1d] font-semibold mb-4">تابعونا على:</div>
               <div className="flex gap-4 mb-6">
                 <motion.a
                   href="https://www.tiktok.com/@xtremenano_sa"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-black p-3 rounded-full hover:bg-gray-800 transition-all duration-300 group"
+                  className="bg-black p-3 rounded-full hover:bg-gray-800 transition-all duration-300"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
@@ -86,11 +87,11 @@ export default function AboutLayout({ children }) {
                   href="https://www.instagram.com/xtremenano_sa"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-full hover:opacity-90 transition-all duration-300 group"
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-full hover:opacity-90 transition-all duration-300"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                 >
-                  <Instagram className="w-5 h-5 text-white group-hover:text-[#e9cb1d]" />
+                  <Instagram className="w-5 h-5 text-white" />
                 </motion.a>
               </div>
               <div className="space-y-1 text-gray-400 text-sm">
@@ -141,14 +142,14 @@ export default function AboutLayout({ children }) {
               <div className="space-y-4 text-gray-300">
                 <div className="flex items-center gap-3">
                   <Phone className="w-5 h-5 text-[#7F3F97]" />
-                  <a href="tel:570044578" className="hover:text-[#7F3F97] transition-colors">
+                  <a href="tel:+966570044578" className="hover:text-[#7F3F97] transition-colors">
                     +966 570044578
                   </a>
                 </div>
                 <div className="flex items-center gap-3">
                   <Mail className="w-5 h-5 text-[#e9cb1d]" />
                   <a href="mailto:info@extremenano.sa" className="hover:text-[#e9cb1d] transition-colors">
-                    Info@xtreme-nano.com
+                    info@extremenano.sa
                   </a>
                 </div>
                 <div className="flex items-center gap-3">
@@ -166,7 +167,7 @@ export default function AboutLayout({ children }) {
             </p>
             <p className="text-gray-400 mt-2">
               تم التصميم بواسطة{" "}
-              <a href="https://wa.me/966541430116" className="text-[#e9cb1d] ml-1" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/966541430116" className="text-[#e9cb1d]" target="_blank" rel="noopener noreferrer">
                 رواد الرقمية
               </a>
             </p>
