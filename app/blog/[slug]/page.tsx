@@ -1,37 +1,30 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { unstable_cache } from 'next/cache';
 import connectDB from "@/lib/db";
 import Blog from "@/models/Blog";
 import { notFound } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 14400; // 4 hours
 
-// Cached blog fetching
-const getBlogBySlug = unstable_cache(
-  async (slug) => {
-    try {
-      await connectDB();
-      const blog = await Blog.findOne({ slug }).lean();
-      if (!blog) return null;
+async function getBlogBySlug(slug: string) {
+  try {
+    await connectDB();
+    const blog = await Blog.findOne({ slug }).lean();
+    if (!blog) return null;
 
-      return {
-        ...blog,
-        _id: blog._id.toString(),
-        image: blog.imageFileId ? `/api/images/${blog.imageFileId}` : blog.image,
-      };
-    } catch (error) {
-      console.error('Error fetching blog by slug:', error);
-      return null;
-    }
-  },
-  ['blog-detail'],
-  { revalidate: 14400, tags: ['blogs'] }
-);
+    return {
+      ...blog,
+      _id: blog._id.toString(),
+      image: blog.imageFileId ? `/api/images/${blog.imageFileId}` : blog.image,
+    };
+  } catch (error) {
+    console.error('Error fetching blog by slug:', error);
+    return null;
+  }
+}
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   try {
     const { slug } = await params;
     const decodedSlug = decodeURIComponent(slug);
@@ -51,7 +44,7 @@ export async function generateMetadata({ params }) {
   }
 }
 
-export default async function BlogPostPage({ params }) {
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   try {
     const { slug } = await params;
     const decodedSlug = decodeURIComponent(slug);

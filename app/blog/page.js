@@ -1,36 +1,29 @@
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { unstable_cache } from 'next/cache';
 import connectDB from "@/lib/db";
 import Blog from "@/models/Blog";
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 14400; // 4 hours in seconds
 
-// Cached blog fetching function
-const getBlogs = unstable_cache(
-  async () => {
-    try {
-      await connectDB();
-      const blogs = await Blog.find().sort({ createdAt: -1 }).lean();
-      return blogs.map((blog) => ({
-        _id: blog._id.toString(),
-        slug: blog.slug,
-        title: blog.title,
-        titleAr: blog.titleAr,
-        description: blog.description,
-        descriptionAr: blog.descriptionAr,
-        image: blog.imageFileId ? `/api/images/${blog.imageFileId}` : blog.image,
-      }));
-    } catch (error) {
-      console.error('Error fetching blogs:', error);
-      return [];
-    }
-  },
-  ['blogs-list'],
-  { revalidate: 14400, tags: ['blogs'] }
-);
+async function getBlogs() {
+  try {
+    await connectDB();
+    const blogs = await Blog.find().sort({ createdAt: -1 }).lean();
+    return blogs.map((blog) => ({
+      _id: blog._id.toString(),
+      slug: blog.slug,
+      title: blog.title,
+      titleAr: blog.titleAr,
+      description: blog.description,
+      descriptionAr: blog.descriptionAr,
+      image: blog.imageFileId ? `/api/images/${blog.imageFileId}` : blog.image,
+    }));
+  } catch (error) {
+    console.error('Error fetching blogs:', error);
+    return [];
+  }
+}
 
 export default async function BlogPage() {
   let posts = [];
