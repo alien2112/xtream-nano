@@ -6,9 +6,7 @@ import styles from './services.module.css';
 
 interface Service {
     _id: string;
-    title: string;
     titleAr: string;
-    description: string;
     descriptionAr: string;
     slug: string;
     image?: string;
@@ -22,9 +20,7 @@ export default function ServicesPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingService, setEditingService] = useState<Service | null>(null);
     const [formData, setFormData] = useState({
-        title: '',
         titleAr: '',
-        description: '',
         descriptionAr: '',
         slug: '',
         image: '',
@@ -57,9 +53,7 @@ export default function ServicesPage() {
     const handleAdd = () => {
         setEditingService(null);
         setFormData({
-            title: '',
             titleAr: '',
-            description: '',
             descriptionAr: '',
             slug: '',
             image: '',
@@ -77,9 +71,7 @@ export default function ServicesPage() {
             ? `/api/images/${(service as any).imageFileId}` 
             : service.image || '';
         setFormData({
-            title: service.title,
             titleAr: service.titleAr,
-            description: service.description,
             descriptionAr: service.descriptionAr,
             slug: service.slug,
             image: service.image || '',
@@ -131,10 +123,10 @@ export default function ServicesPage() {
         }
     };
 
-    const generateSlug = (title: string) => {
-        return title
+    const generateSlug = (titleAr: string) => {
+        return titleAr
             .toLowerCase()
-            .replace(/[^\w\s-]/g, '')
+            .replace(/[^\w\s\u0600-\u06FF-]/g, '')
             .replace(/\s+/g, '-')
             .replace(/-+/g, '-')
             .trim();
@@ -202,8 +194,7 @@ export default function ServicesPage() {
                         <thead>
                             <tr>
                                 <th>الترتيب</th>
-                                <th>العنوان (عربي)</th>
-                                <th>العنوان (إنجليزي)</th>
+                                <th>العنوان</th>
                                 <th>الرابط</th>
                                 <th>مميز</th>
                                 <th>الإجراءات</th>
@@ -214,7 +205,6 @@ export default function ServicesPage() {
                                 <tr key={service._id}>
                                     <td>{service.order || 0}</td>
                                     <td>{service.titleAr}</td>
-                                    <td>{service.title}</td>
                                     <td className={styles.slug}>{service.slug}</td>
                                     <td>
                                         <span className={`${styles.badge} ${service.featured ? styles.badgeFeatured : ''}`}>
@@ -253,31 +243,20 @@ export default function ServicesPage() {
                             {editingService ? 'تعديل الخدمة' : 'إضافة خدمة جديدة'}
                         </h2>
                         <form onSubmit={handleSubmit} className={styles.form}>
-                            <div className={styles.formRow}>
-                                <div className={styles.formGroup}>
-                                    <label>العنوان (عربي)</label>
-                                    <input
-                                        type="text"
-                                        value={formData.titleAr}
-                                        onChange={(e) => setFormData({ ...formData, titleAr: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label>العنوان (إنجليزي)</label>
-                                    <input
-                                        type="text"
-                                        value={formData.title}
-                                        onChange={(e) => {
-                                            setFormData({
-                                                ...formData,
-                                                title: e.target.value,
-                                                slug: generateSlug(e.target.value),
-                                            });
-                                        }}
-                                        required
-                                    />
-                                </div>
+                            <div className={styles.formGroup}>
+                                <label>العنوان</label>
+                                <input
+                                    type="text"
+                                    value={formData.titleAr}
+                                    onChange={(e) => {
+                                        setFormData({
+                                            ...formData,
+                                            titleAr: e.target.value,
+                                            slug: generateSlug(e.target.value),
+                                        });
+                                    }}
+                                    required
+                                />
                             </div>
 
                             <div className={styles.formGroup}>
@@ -290,25 +269,14 @@ export default function ServicesPage() {
                                 />
                             </div>
 
-                            <div className={styles.formRow}>
-                                <div className={styles.formGroup}>
-                                    <label>الوصف (عربي)</label>
-                                    <textarea
-                                        value={formData.descriptionAr}
-                                        onChange={(e) => setFormData({ ...formData, descriptionAr: e.target.value })}
-                                        rows={3}
-                                        required
-                                    />
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label>الوصف (إنجليزي)</label>
-                                    <textarea
-                                        value={formData.description}
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        rows={3}
-                                        required
-                                    />
-                                </div>
+                            <div className={styles.formGroup}>
+                                <label>الوصف</label>
+                                <textarea
+                                    value={formData.descriptionAr}
+                                    onChange={(e) => setFormData({ ...formData, descriptionAr: e.target.value })}
+                                    rows={3}
+                                    required
+                                />
                             </div>
 
                             <div className={styles.formGroup}>

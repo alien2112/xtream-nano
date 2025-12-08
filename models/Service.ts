@@ -1,17 +1,13 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface IServiceFeature {
-    title: string;
     titleAr: string;
-    description: string;
     descriptionAr: string;
     icon?: string;
 }
 
 export interface IService extends Document {
-    title: string;
     titleAr: string;
-    description: string;
     descriptionAr: string;
     longDescription: string;
     longDescriptionAr: string;
@@ -29,9 +25,7 @@ export interface IService extends Document {
 }
 
 const ServiceSchema: Schema = new Schema({
-    title: { type: String, required: true },
     titleAr: { type: String, required: true },
-    description: { type: String, required: true },
     descriptionAr: { type: String, required: true },
     longDescription: { type: String, required: false },
     longDescriptionAr: { type: String, required: false },
@@ -43,9 +37,7 @@ const ServiceSchema: Schema = new Schema({
     featured: { type: Boolean, default: false, index: true },
     order: { type: Number, default: 0 },
     features: [{
-        title: String,
         titleAr: String,
-        description: String,
         descriptionAr: String,
         icon: String
     }],

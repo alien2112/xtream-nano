@@ -7,6 +7,7 @@ import styles from './site-images.module.css';
 interface SiteImage {
     key: string;
     url: string;
+    imageFileId?: string;
     label: string;
     description?: string;
     section: string;
@@ -36,17 +37,27 @@ export default function SiteImagesPage() {
         try {
             const res = await fetch('/api/site-images', {
                 cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                },
             });
             if (res.ok) {
                 const data = await res.json();
+                console.log('Fetched images from API:', data);
                 if (Array.isArray(data)) {
                     // If we have images from DB, use them, otherwise merge with defaults
                     if (data.length > 0) {
                         // Merge DB images with defaults to ensure all keys are present
                         const dbImageMap = new Map(data.map(img => [img.key, img]));
-                        const merged = DEFAULT_IMAGES.map(defaultImg => 
-                            dbImageMap.get(defaultImg.key) || defaultImg
-                        );
+                        const merged = DEFAULT_IMAGES.map(defaultImg => {
+                            const dbImg = dbImageMap.get(defaultImg.key);
+                            if (dbImg) {
+                                // Ensure URL is correctly set from imageFileId if needed
+                                const url = dbImg.imageFileId ? `/api/images/${dbImg.imageFileId}` : (dbImg.url || defaultImg.url);
+                                return { ...dbImg, url };
+                            }
+                            return defaultImg;
+                        });
                         setImages(merged);
                     } else {
                         // No images in DB, use defaults
@@ -104,28 +115,47 @@ export default function SiteImagesPage() {
             }
 
             const uploadData = await uploadRes.json();
-            const { fileId, url } = uploadData;
+            const { fileId } = uploadData;
 
-            // Then, update the site image with the file ID
+            if (!fileId) {
+                throw new Error('فشل في الحصول على معرف الملف');
+            }
+
+            // Then, update the site image with the file ID (don't send url, let API construct it)
             const res = await fetch('/api/site-images', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key, imageFileId: fileId, url }),
+                body: JSON.stringify({ key, imageFileId: fileId }),
             });
 
             if (res.ok) {
                 const updatedImage = await res.json();
+                console.log('Updated image from API:', updatedImage);
+                
+                // Use the URL from the API response which should be correctly constructed
+                const imageUrl = updatedImage.url || `/api/images/${fileId}`;
+                
+                // Update local state immediately
                 setImages(images.map(img =>
-                    img.key === key ? { ...img, url: updatedImage.url || url, imageFileId: updatedImage.imageFileId } : img
+                    img.key === key ? { 
+                        ...img, 
+                        url: imageUrl, 
+                        imageFileId: updatedImage.imageFileId || fileId 
+                    } : img
                 ));
+                
                 setEditingKey(null);
                 setSelectedFile(null);
                 if (previewUrl) {
                     URL.revokeObjectURL(previewUrl);
                     setPreviewUrl(null);
                 }
-                // Refresh images to ensure we have the latest from DB
+                
+                // Refresh images to ensure we have the latest from DB (with cache busting)
                 await fetchImages();
+            } else {
+                const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+                throw new Error(errorData.error || 'فشل في حفظ الصورة');
             }
         } catch (error) {
             console.error('Failed to save image:', error);
@@ -173,7 +203,15 @@ export default function SiteImagesPage() {
                                 <div key={image.key} className={styles.imageCard}>
                                     <div className={styles.imagePreview}>
                                         {image.url ? (
-                                            <img src={image.url} alt={image.label} />
+                                            <img 
+                                                src={image.url} 
+                                                alt={image.label}
+                                                onError={(e) => {
+                                                    console.error('Failed to load image:', image.url, 'imageFileId:', image.imageFileId);
+                                                    // Show placeholder on error
+                                                    e.currentTarget.style.display = 'none';
+                                                }}
+                                            />
                                         ) : (
                                             <div className={styles.placeholder}>
                                                 <ImageIcon size={48} />

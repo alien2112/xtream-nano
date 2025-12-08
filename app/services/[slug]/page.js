@@ -35,8 +35,8 @@ export async function generateMetadata({ params }) {
   }
 
   return {
-    title: `${service.titleAr || service.title} | XTREME NANO`,
-    description: service.descriptionAr || service.description,
+    title: `${service.titleAr} | XTREME NANO`,
+    description: service.descriptionAr,
   };
 }
 
@@ -65,12 +65,12 @@ export default async function ServicePage({ params }) {
 
         {/* العنوان */}
         <h1 className="text-4xl font-bold text-[#7F3F97] mb-6 text-center">
-          {service.titleAr || service.title}
+          {service.titleAr}
         </h1>
 
         {/* وصف الخدمة */}
         <p className="text-gray-700 text-lg max-w-3xl mx-auto mb-12 text-center">
-          {service.descriptionAr || service.description}
+          {service.descriptionAr}
         </p>
 
         {/* صورة الخدمة */}
@@ -78,7 +78,7 @@ export default async function ServicePage({ params }) {
           <div className="overflow-hidden rounded-3xl shadow-lg">
             <img
               src={service.image}
-              alt={service.titleAr || service.title}
+              alt={service.titleAr}
               className="w-full h-96 object-cover hover:scale-105 transition-transform duration-500"
             />
           </div>
@@ -88,7 +88,7 @@ export default async function ServicePage({ params }) {
         <section className="bg-white p-8 rounded-3xl shadow-lg max-w-4xl mx-auto mb-12">
           <h2 className="text-2xl font-bold text-[#7F3F97] mb-4 text-right">تفاصيل الخدمة</h2>
           <p className="text-gray-700 text-lg text-right">
-            {service.longDescriptionAr || service.longDescription || service.descriptionAr || service.description}
+            {service.longDescriptionAr || service.longDescription || service.descriptionAr}
           </p>
 
           {service.features && service.features.length > 0 && (

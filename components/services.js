@@ -160,7 +160,7 @@ export default function Services() {
                   <div className="relative h-64 overflow-hidden">
                     <img
                       src={getImageUrl(service)}
-                      alt={service.titleAr || service.title}
+                      alt={service.titleAr}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
 
@@ -173,12 +173,12 @@ export default function Services() {
 
                   <div className="p-8 text-white text-right">
                     <h3 className="text-2xl font-bold text-[#e9cb1d] mb-4">
-                      {service.titleAr || service.title}
+                      {service.titleAr}
                     </h3>
 
                     <p
                       className="text-white leading-relaxed mb-6"
-                      dangerouslySetInnerHTML={{ __html: service.descriptionAr || service.description }}
+                      dangerouslySetInnerHTML={{ __html: service.descriptionAr }}
                     />
 
                     <Link

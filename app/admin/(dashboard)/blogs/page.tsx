@@ -6,10 +6,8 @@ import styles from './blogs.module.css';
 
 interface Blog {
     _id: string;
-    title: string;
     titleAr: string;
     slug: string;
-    description: string;
     descriptionAr: string;
     image?: string;
     featured?: boolean;
@@ -21,9 +19,7 @@ export default function BlogsPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
     const [formData, setFormData] = useState({
-        title: '',
         titleAr: '',
-        description: '',
         descriptionAr: '',
         slug: '',
         image: '',
@@ -55,9 +51,7 @@ export default function BlogsPage() {
     const handleAdd = () => {
         setEditingBlog(null);
         setFormData({
-            title: '',
             titleAr: '',
-            description: '',
             descriptionAr: '',
             slug: '',
             image: '',
@@ -74,9 +68,7 @@ export default function BlogsPage() {
             ? `/api/images/${(blog as any).imageFileId}` 
             : blog.image || '';
         setFormData({
-            title: blog.title,
             titleAr: blog.titleAr,
-            description: blog.description,
             descriptionAr: blog.descriptionAr,
             slug: blog.slug,
             image: blog.image || '',
@@ -197,8 +189,7 @@ export default function BlogsPage() {
                     <table className={styles.table}>
                         <thead>
                             <tr>
-                                <th>العنوان (عربي)</th>
-                                <th>العنوان (إنجليزي)</th>
+                                <th>العنوان</th>
                                 <th>الرابط</th>
                                 <th>مميز</th>
                                 <th>الإجراءات</th>
@@ -208,7 +199,6 @@ export default function BlogsPage() {
                             {blogs.map((blog) => (
                                 <tr key={blog._id}>
                                     <td>{blog.titleAr}</td>
-                                    <td>{blog.title}</td>
                                     <td className={styles.slug}>{blog.slug}</td>
                                     <td>
                                         <span className={`${styles.badge} ${blog.featured ? styles.badgeFeatured : ''}`}>
@@ -247,31 +237,20 @@ export default function BlogsPage() {
                             {editingBlog ? 'تعديل المقال' : 'إضافة مقال جديد'}
                         </h2>
                         <form onSubmit={handleSubmit} className={styles.form}>
-                            <div className={styles.formRow}>
-                                <div className={styles.formGroup}>
-                                    <label>العنوان (عربي)</label>
-                                    <input
-                                        type="text"
-                                        value={formData.titleAr}
-                                        onChange={(e) => {
-                                            setFormData({
-                                                ...formData,
-                                                titleAr: e.target.value,
-                                                slug: generateSlug(e.target.value),
-                                            });
-                                        }}
-                                        required
-                                    />
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label>العنوان (إنجليزي)</label>
-                                    <input
-                                        type="text"
-                                        value={formData.title}
-                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                        required
-                                    />
-                                </div>
+                            <div className={styles.formGroup}>
+                                <label>العنوان</label>
+                                <input
+                                    type="text"
+                                    value={formData.titleAr}
+                                    onChange={(e) => {
+                                        setFormData({
+                                            ...formData,
+                                            titleAr: e.target.value,
+                                            slug: generateSlug(e.target.value),
+                                        });
+                                    }}
+                                    required
+                                />
                             </div>
 
                             <div className={styles.formGroup}>
@@ -284,25 +263,14 @@ export default function BlogsPage() {
                                 />
                             </div>
 
-                            <div className={styles.formRow}>
-                                <div className={styles.formGroup}>
-                                    <label>الوصف (عربي)</label>
-                                    <textarea
-                                        value={formData.descriptionAr}
-                                        onChange={(e) => setFormData({ ...formData, descriptionAr: e.target.value })}
-                                        rows={3}
-                                        required
-                                    />
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label>الوصف (إنجليزي)</label>
-                                    <textarea
-                                        value={formData.description}
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                        rows={3}
-                                        required
-                                    />
-                                </div>
+                            <div className={styles.formGroup}>
+                                <label>الوصف</label>
+                                <textarea
+                                    value={formData.descriptionAr}
+                                    onChange={(e) => setFormData({ ...formData, descriptionAr: e.target.value })}
+                                    rows={3}
+                                    required
+                                />
                             </div>
 
                             <div className={styles.formGroup}>

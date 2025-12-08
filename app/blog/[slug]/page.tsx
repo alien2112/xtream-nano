@@ -35,8 +35,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 
     return {
-      title: `${blog.titleAr || blog.title} | XTREME NANO`,
-      description: blog.descriptionAr || blog.description,
+      title: `${blog.titleAr} | XTREME NANO`,
+      description: blog.descriptionAr,
     };
   } catch (error) {
     console.error('Error generating metadata:', error);
@@ -73,19 +73,19 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           {blog.image && (
             <img
               src={blog.image}
-              alt={blog.titleAr || blog.title}
+              alt={blog.titleAr || (blog as any).title || 'Blog'}
               className="w-full h-80 object-cover rounded-2xl mb-8 shadow-lg"
             />
           )}
 
           {/* Title */}
           <h1 className="text-4xl font-bold text-[#7F3F97] mb-6 text-right">
-            {blog.titleAr || blog.title}
+            {blog.titleAr || (blog as any).title || 'Blog'}
           </h1>
 
           {/* Description */}
           <p className="text-xl text-gray-600 mb-8 text-right leading-relaxed">
-            {blog.descriptionAr || blog.description}
+            {blog.descriptionAr || (blog as any).description || ''}
           </p>
 
           {/* Content */}
@@ -94,7 +94,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               className="prose prose-lg max-w-none text-right"
               dir="rtl"
               dangerouslySetInnerHTML={{
-                __html: blog.contentAr || blog.content,
+                __html: blog.contentAr || (blog as any).content || '',
               }}
             />
           )}

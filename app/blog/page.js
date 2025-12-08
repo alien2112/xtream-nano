@@ -13,9 +13,7 @@ async function getBlogs() {
     return blogs.map((blog) => ({
       _id: blog._id.toString(),
       slug: blog.slug,
-      title: blog.title,
       titleAr: blog.titleAr,
-      description: blog.description,
       descriptionAr: blog.descriptionAr,
       image: blog.imageFileId ? `/api/images/${blog.imageFileId}` : blog.image,
     }));
@@ -56,15 +54,15 @@ export default async function BlogPage() {
                 {post.image && (
                   <img
                     src={post.image}
-                    alt={post.titleAr || post.title}
+                    alt={post.titleAr}
                     className="w-full h-56 object-cover"
                   />
                 )}
                 <div className="p-6 text-right">
                   <h2 className="text-xl font-semibold mb-2 text-gray-800">
-                    {post.titleAr || post.title}
+                    {post.titleAr}
                   </h2>
-                  <p className="text-gray-600 text-sm mb-4">{post.descriptionAr || post.description}</p>
+                  <p className="text-gray-600 text-sm mb-4">{post.descriptionAr}</p>
                   <Link
                     href={`/blog/${encodeURIComponent(post.slug)}`}
                     className="text-[#7F3F97] font-semibold hover:underline"

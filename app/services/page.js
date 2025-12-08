@@ -53,15 +53,15 @@ export default function ServicesPage() {
         >
           <img
             src={imageUrl}
-            alt={service.titleAr || service.title}
+            alt={service.titleAr}
             className="w-full h-48 object-cover"
           />
           <div className="p-4">
             <h2 className="text-xl font-bold text-[#7F3F97] mb-2">
-              {service.titleAr || service.title}
+              {service.titleAr}
             </h2>
             <p className="text-gray-700">
-              {service.descriptionAr || service.description}
+              {service.descriptionAr}
             </p>
           </div>
         </Link>

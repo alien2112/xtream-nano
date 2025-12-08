@@ -102,9 +102,12 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'المفتاح مطلوب' }, { status: 400 });
         }
 
+        // Construct URL from imageFileId if provided
+        const imageUrl = imageFileId ? `/api/images/${imageFileId}` : url;
+
         const image = await SiteImage.create({
             key,
-            url,
+            url: imageUrl,
             imageFileId,
             label,
             description,
@@ -119,6 +122,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({
             ...image.toObject(),
             _id: image._id.toString(),
+            url: image.imageFileId ? `/api/images/${image.imageFileId}` : image.url,
         }, { status: 201 });
     } catch (error) {
         console.error('Failed to create site image:', error);
