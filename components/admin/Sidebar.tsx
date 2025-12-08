@@ -27,10 +27,10 @@ export default function Sidebar() {
         { name: 'صور الموقع', path: '/admin/site-images', icon: ImageIcon },
     ];
 
-    const handleLogout = async () => {
-        await fetch('/api/admin/logout', { method: 'POST' });
+    const handleLogout = () => {
+        localStorage.removeItem('admin_authenticated');
         router.push('/admin/login');
-        router.refresh();
+        window.location.reload();
     };
 
     useEffect(() => {

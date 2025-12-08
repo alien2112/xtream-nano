@@ -1,14 +1,36 @@
-import { getSession } from '@/lib/auth';
-import { redirect } from 'next/navigation';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/admin/Sidebar';
 import styles from './dashboard.module.css';
 
-export const dynamic = 'force-dynamic';
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+    const router = useRouter();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const session = await getSession();
-    if (!session) {
-        redirect('/admin/login');
+    useEffect(() => {
+        // Check localStorage on client side
+        const auth = localStorage.getItem('admin_authenticated');
+        if (auth === 'true') {
+            setIsAuthenticated(true);
+        } else {
+            router.push('/admin/login');
+        }
+        setLoading(false);
+    }, [router]);
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <div>جاري التحميل...</div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return null;
     }
 
     return (
