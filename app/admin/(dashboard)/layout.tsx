@@ -1,27 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/admin/Sidebar';
 import styles from './dashboard.module.css';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const router = useRouter();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        // Check localStorage on client side
-        const auth = localStorage.getItem('admin_authenticated');
-        if (auth === 'true') {
-            setIsAuthenticated(true);
-        } else {
-            router.push('/admin/login');
+        setMounted(true);
+        // Check localStorage immediately
+        if (typeof window !== 'undefined') {
+            const auth = localStorage.getItem('admin_authenticated');
+            if (auth === 'true') {
+                setIsAuthenticated(true);
+            } else {
+                // Use window.location for immediate redirect
+                window.location.href = '/admin/login';
+            }
         }
-        setLoading(false);
-    }, [router]);
+    }, []);
 
-    if (loading) {
+    // Don't render anything until mounted (client-side)
+    if (!mounted) {
         return (
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
                 <div>جاري التحميل...</div>
@@ -29,8 +31,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         );
     }
 
+    // If not authenticated, don't render (redirect will happen)
     if (!isAuthenticated) {
-        return null;
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <div>جاري إعادة التوجيه...</div>
+            </div>
+        );
     }
 
     return (

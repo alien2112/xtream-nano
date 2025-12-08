@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import styles from './login.module.css';
 
 export default function LoginPage() {
@@ -9,7 +8,18 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        // If already authenticated, redirect
+        if (typeof window !== 'undefined') {
+            const auth = localStorage.getItem('admin_authenticated');
+            if (auth === 'true') {
+                window.location.href = '/admin';
+            }
+        }
+    }, []);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -19,14 +29,26 @@ export default function LoginPage() {
         // Simple hardcoded check - no API call needed
         if (username === 'admin' && password === 'admin123') {
             // Store in localStorage
-            localStorage.setItem('admin_authenticated', 'true');
-            // Redirect
-            window.location.href = '/admin';
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('admin_authenticated', 'true');
+                // Redirect immediately
+                window.location.href = '/admin';
+            }
         } else {
             setError('بيانات الدخول غير صحيحة');
             setLoading(false);
         }
     };
+
+    if (!mounted) {
+        return (
+            <div className={styles.container}>
+                <div className={styles.card}>
+                    <div>جاري التحميل...</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.container}>
