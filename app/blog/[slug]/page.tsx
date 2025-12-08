@@ -12,115 +12,130 @@ export const revalidate = 14400; // 4 hours
 // Cached blog fetching
 const getBlogBySlug = unstable_cache(
   async (slug) => {
-    await connectDB();
-    const blog = await Blog.findOne({ slug }).lean();
-    if (!blog) return null;
+    try {
+      await connectDB();
+      const blog = await Blog.findOne({ slug }).lean();
+      if (!blog) return null;
 
-    return {
-      ...blog,
-      _id: blog._id.toString(),
-      image: blog.imageFileId ? `/api/images/${blog.imageFileId}` : blog.image,
-    };
+      return {
+        ...blog,
+        _id: blog._id.toString(),
+        image: blog.imageFileId ? `/api/images/${blog.imageFileId}` : blog.image,
+      };
+    } catch (error) {
+      console.error('Error fetching blog by slug:', error);
+      return null;
+    }
   },
   ['blog-detail'],
   { revalidate: 14400, tags: ['blogs'] }
 );
 
 export async function generateMetadata({ params }) {
-  const { slug } = await params;
-  const decodedSlug = decodeURIComponent(slug);
-  const blog = await getBlogBySlug(decodedSlug);
+  try {
+    const { slug } = await params;
+    const decodedSlug = decodeURIComponent(slug);
+    const blog = await getBlogBySlug(decodedSlug);
 
-  if (!blog) {
+    if (!blog) {
+      return { title: 'المقال غير موجود' };
+    }
+
+    return {
+      title: `${blog.titleAr || blog.title} | XTREME NANO`,
+      description: blog.descriptionAr || blog.description,
+    };
+  } catch (error) {
+    console.error('Error generating metadata:', error);
     return { title: 'المقال غير موجود' };
   }
-
-  return {
-    title: `${blog.titleAr || blog.title} | XTREME NANO`,
-    description: blog.descriptionAr || blog.description,
-  };
 }
 
 export default async function BlogPostPage({ params }) {
-  const { slug } = await params;
-  const decodedSlug = decodeURIComponent(slug);
-  const blog = await getBlogBySlug(decodedSlug);
+  try {
+    const { slug } = await params;
+    const decodedSlug = decodeURIComponent(slug);
+    const blog = await getBlogBySlug(decodedSlug);
 
-  if (!blog) {
+    if (!blog) {
+      notFound();
+    }
+
+    return (
+      <main className="min-h-screen bg-gray-50">
+        <Header />
+
+        <article className="max-w-4xl mx-auto px-4 py-24">
+          {/* Back link */}
+          <div className="mb-8">
+            <Link
+              href="/blog"
+              className="text-[#7F3F97] font-semibold hover:underline"
+            >
+              ← العودة للمدونة
+            </Link>
+          </div>
+
+          {/* Featured Image */}
+          {blog.image && (
+            <img
+              src={blog.image}
+              alt={blog.titleAr || blog.title}
+              className="w-full h-80 object-cover rounded-2xl mb-8 shadow-lg"
+            />
+          )}
+
+          {/* Title */}
+          <h1 className="text-4xl font-bold text-[#7F3F97] mb-6 text-right">
+            {blog.titleAr || blog.title}
+          </h1>
+
+          {/* Description */}
+          <p className="text-xl text-gray-600 mb-8 text-right leading-relaxed">
+            {blog.descriptionAr || blog.description}
+          </p>
+
+          {/* Content */}
+          {(blog.contentAr || blog.content) && (
+            <div
+              className="prose prose-lg max-w-none text-right"
+              dir="rtl"
+              dangerouslySetInnerHTML={{
+                __html: blog.contentAr || blog.content,
+              }}
+            />
+          )}
+
+          {/* CTA Section */}
+          <section className="mt-16 py-12 bg-[#7F3F97] text-center text-white rounded-3xl">
+            <h2 className="text-3xl font-bold text-[#e9cb1d] mb-4">
+              جاهز لتجربة الأفضل؟
+            </h2>
+            <p className="mb-6 text-lg">
+              احجز موعدك الآن واستمتع بخدمة ممتازة لسيارتك في الرياض
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <a
+                href="tel:0570044578"
+                className="bg-[#e9cb1d] text-black px-8 py-4 rounded-full font-bold text-lg hover:opacity-90 hover:scale-105 transition-all duration-300"
+              >
+                اتصال
+              </a>
+              <a
+                href="https://wa.me/966570044578"
+                className="border-2 border-[#e9cb1d] text-[#e9cb1d] px-8 py-4 rounded-full font-bold text-lg hover:bg-[#e9cb1d] hover:text-black transition-all duration-300"
+              >
+                واتس اب
+              </a>
+            </div>
+          </section>
+        </article>
+
+        <Footer />
+      </main>
+    );
+  } catch (error) {
+    console.error('Error loading blog post:', error);
     notFound();
   }
-
-  return (
-    <main className="min-h-screen bg-gray-50">
-      <Header />
-
-      <article className="max-w-4xl mx-auto px-4 py-24">
-        {/* Back link */}
-        <div className="mb-8">
-          <Link
-            href="/blog"
-            className="text-[#7F3F97] font-semibold hover:underline"
-          >
-            ← العودة للمدونة
-          </Link>
-        </div>
-
-        {/* Featured Image */}
-        {blog.image && (
-          <img
-            src={blog.image}
-            alt={blog.titleAr || blog.title}
-            className="w-full h-80 object-cover rounded-2xl mb-8 shadow-lg"
-          />
-        )}
-
-        {/* Title */}
-        <h1 className="text-4xl font-bold text-[#7F3F97] mb-6 text-right">
-          {blog.titleAr || blog.title}
-        </h1>
-
-        {/* Description */}
-        <p className="text-xl text-gray-600 mb-8 text-right leading-relaxed">
-          {blog.descriptionAr || blog.description}
-        </p>
-
-        {/* Content */}
-        {(blog.contentAr || blog.content) && (
-          <div
-            className="prose prose-lg max-w-none text-right"
-            dir="rtl"
-            dangerouslySetInnerHTML={{
-              __html: blog.contentAr || blog.content,
-            }}
-          />
-        )}
-
-        {/* CTA Section */}
-        <section className="mt-16 py-12 bg-[#7F3F97] text-center text-white rounded-3xl">
-          <h2 className="text-3xl font-bold text-[#e9cb1d] mb-4">
-            جاهز لتجربة الأفضل؟
-          </h2>
-          <p className="mb-6 text-lg">
-            احجز موعدك الآن واستمتع بخدمة ممتازة لسيارتك في الرياض
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <a
-              href="tel:0570044578"
-              className="bg-[#e9cb1d] text-black px-8 py-4 rounded-full font-bold text-lg hover:opacity-90 hover:scale-105 transition-all duration-300"
-            >
-              اتصال
-            </a>
-            <a
-              href="https://wa.me/966570044578"
-              className="border-2 border-[#e9cb1d] text-[#e9cb1d] px-8 py-4 rounded-full font-bold text-lg hover:bg-[#e9cb1d] hover:text-black transition-all duration-300"
-            >
-              واتس اب
-            </a>
-          </div>
-        </section>
-      </article>
-
-      <Footer />
-    </main>
-  );
 }
