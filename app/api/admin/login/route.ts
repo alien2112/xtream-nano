@@ -7,13 +7,9 @@ export async function POST(req: NextRequest) {
     try {
         const { username, password } = await req.json();
 
-        const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
-        const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-
-        if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
-            console.error('Admin credentials not configured');
-            return NextResponse.json({ error: 'خطأ في إعدادات الخادم' }, { status: 500 });
-        }
+        // Hardcoded admin credentials
+        const ADMIN_USERNAME = 'admin';
+        const ADMIN_PASSWORD = 'admin123';
 
         if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
             const token = await signToken({ username });
