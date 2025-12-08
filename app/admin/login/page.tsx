@@ -21,17 +21,21 @@ export default function LoginPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
+                credentials: 'include', // Important for cookies
             });
 
-            if (res.ok) {
-                router.push('/admin');
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                // Use window.location for full page reload to ensure cookies are set
+                window.location.href = '/admin';
             } else {
-                const data = await res.json();
                 setError(data.error || 'فشل تسجيل الدخول');
+                setLoading(false);
             }
         } catch (err) {
+            console.error('Login error:', err);
             setError('حدث خطأ. يرجى المحاولة مرة أخرى.');
-        } finally {
             setLoading(false);
         }
     };

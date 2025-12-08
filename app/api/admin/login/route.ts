@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { signToken } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
     try {
         const { username, password } = await req.json();
@@ -9,6 +11,7 @@ export async function POST(req: NextRequest) {
         const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
         if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+            console.error('Admin credentials not configured');
             return NextResponse.json({ error: 'خطأ في إعدادات الخادم' }, { status: 500 });
         }
 
@@ -16,10 +19,14 @@ export async function POST(req: NextRequest) {
             const token = await signToken({ username });
 
             const response = NextResponse.json({ success: true });
+            
+            // Cookie settings optimized for Vercel
+            const isProduction = process.env.VERCEL || process.env.NODE_ENV === 'production';
+            
             response.cookies.set('admin_token', token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+                secure: isProduction, // Always secure on Vercel
+                sameSite: 'lax', // Changed from 'strict' for better compatibility
                 maxAge: 60 * 60 * 24, // 1 day
                 path: '/',
             });
@@ -29,6 +36,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ error: 'بيانات الدخول غير صحيحة' }, { status: 401 });
     } catch (error) {
+        console.error('Login error:', error);
         return NextResponse.json({ error: 'خطأ في الخادم' }, { status: 500 });
     }
 }
