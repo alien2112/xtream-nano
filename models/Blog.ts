@@ -26,6 +26,18 @@ const BlogSchema: Schema = new Schema({
     updatedAt: { type: Date, default: Date.now },
 });
 
+// Force recompilation if model exists with different schema
+if (mongoose.models.Blog) {
+    const existingSchema = (mongoose.models.Blog as any).schema;
+    // Check if schema has changed (old schema had title/description, new doesn't)
+    if (existingSchema?.paths?.title || existingSchema?.paths?.description) {
+        delete mongoose.models.Blog;
+        if (mongoose.modelSchemas && mongoose.modelSchemas.Blog) {
+            delete mongoose.modelSchemas.Blog;
+        }
+    }
+}
+
 const Blog: Model<IBlog> = mongoose.models.Blog || mongoose.model<IBlog>('Blog', BlogSchema);
 
 export default Blog;

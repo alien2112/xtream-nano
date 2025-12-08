@@ -37,10 +37,16 @@ export async function PUT(
         const { id } = await params;
         const body = await req.json();
 
+        // Remove any old English fields if they exist
+        const { title, description, ...cleanBody } = body;
+        
+        // Ensure featured is always a boolean (explicitly set to false if not explicitly true)
+        cleanBody.featured = !!(cleanBody.featured === true || cleanBody.featured === 'true' || cleanBody.featured === 1);
+
         const blog = await Blog.findByIdAndUpdate(
             id,
-            { ...body, updatedAt: new Date() },
-            { new: true }
+            { ...cleanBody, updatedAt: new Date() },
+            { new: true, runValidators: true }
         ).lean();
 
         if (!blog) {
@@ -54,9 +60,14 @@ export async function PUT(
             ...blog,
             _id: (blog as any)._id.toString(),
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Failed to update blog:', error);
-        return NextResponse.json({ error: 'فشل في تحديث المقال' }, { status: 500 });
+        const errorMessage = error?.message || 'فشل في تحديث المقال';
+        const errorDetails = error?.errors ? Object.keys(error.errors).map(key => `${key}: ${error.errors[key].message}`).join(', ') : '';
+        return NextResponse.json({ 
+            error: errorMessage,
+            details: errorDetails 
+        }, { status: 500 });
     }
 }
 

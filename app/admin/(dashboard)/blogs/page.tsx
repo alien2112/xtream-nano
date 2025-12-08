@@ -111,9 +111,14 @@ export default function BlogsPage() {
             if (res.ok) {
                 setIsModalOpen(false);
                 fetchBlogs();
+            } else {
+                const errorData = await res.json();
+                console.error('Failed to save blog:', errorData);
+                alert(`فشل في حفظ المقال: ${errorData.error || 'خطأ غير معروف'}\n${errorData.details || ''}`);
             }
         } catch (error) {
             console.error('Failed to save blog:', error);
+            alert('حدث خطأ أثناء حفظ المقال. يرجى التحقق من وحدة التحكم.');
         } finally {
             setSaving(false);
         }
@@ -201,8 +206,8 @@ export default function BlogsPage() {
                                     <td>{blog.titleAr}</td>
                                     <td className={styles.slug}>{blog.slug}</td>
                                     <td>
-                                        <span className={`${styles.badge} ${blog.featured ? styles.badgeFeatured : ''}`}>
-                                            {blog.featured ? 'نعم' : 'لا'}
+                                        <span className={`${styles.badge} ${blog.featured === true ? styles.badgeFeatured : ''}`}>
+                                            {blog.featured === true ? 'نعم' : 'لا'}
                                         </span>
                                     </td>
                                     <td>

@@ -46,6 +46,18 @@ const ServiceSchema: Schema = new Schema({
     createdAt: { type: Date, default: Date.now },
 });
 
+// Force recompilation if model exists with different schema
+if (mongoose.models.Service) {
+    const existingSchema = (mongoose.models.Service as any).schema;
+    // Check if schema has changed (old schema had title/description, new doesn't)
+    if (existingSchema?.paths?.title || existingSchema?.paths?.description) {
+        delete mongoose.models.Service;
+        if (mongoose.modelSchemas && mongoose.modelSchemas.Service) {
+            delete mongoose.modelSchemas.Service;
+        }
+    }
+}
+
 const Service: Model<IService> = mongoose.models.Service || mongoose.model<IService>('Service', ServiceSchema);
 
 export default Service;

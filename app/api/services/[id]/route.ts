@@ -37,7 +37,13 @@ export async function PUT(
         const { id } = await params;
         const body = await req.json();
 
-        const service = await Service.findByIdAndUpdate(id, body, { new: true }).lean();
+        // Remove any old English fields if they exist
+        const { title, description, ...cleanBody } = body;
+        
+        // Ensure featured is always a boolean (explicitly set to false if not explicitly true)
+        cleanBody.featured = !!(cleanBody.featured === true || cleanBody.featured === 'true' || cleanBody.featured === 1);
+
+        const service = await Service.findByIdAndUpdate(id, cleanBody, { new: true, runValidators: true }).lean();
 
         if (!service) {
             return NextResponse.json({ error: 'الخدمة غير موجودة' }, { status: 404 });
@@ -50,9 +56,14 @@ export async function PUT(
             ...service,
             _id: (service as any)._id.toString(),
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Failed to update service:', error);
-        return NextResponse.json({ error: 'فشل في تحديث الخدمة' }, { status: 500 });
+        const errorMessage = error?.message || 'فشل في تحديث الخدمة';
+        const errorDetails = error?.errors ? Object.keys(error.errors).map(key => `${key}: ${error.errors[key].message}`).join(', ') : '';
+        return NextResponse.json({ 
+            error: errorMessage,
+            details: errorDetails 
+        }, { status: 500 });
     }
 }
 

@@ -115,9 +115,14 @@ export default function ServicesPage() {
             if (res.ok) {
                 setIsModalOpen(false);
                 fetchServices();
+            } else {
+                const errorData = await res.json();
+                console.error('Failed to save service:', errorData);
+                alert(`فشل في حفظ الخدمة: ${errorData.error || 'خطأ غير معروف'}\n${errorData.details || ''}`);
             }
         } catch (error) {
             console.error('Failed to save service:', error);
+            alert('حدث خطأ أثناء حفظ الخدمة. يرجى التحقق من وحدة التحكم.');
         } finally {
             setSaving(false);
         }
@@ -207,8 +212,8 @@ export default function ServicesPage() {
                                     <td>{service.titleAr}</td>
                                     <td className={styles.slug}>{service.slug}</td>
                                     <td>
-                                        <span className={`${styles.badge} ${service.featured ? styles.badgeFeatured : ''}`}>
-                                            {service.featured ? 'نعم' : 'لا'}
+                                        <span className={`${styles.badge} ${service.featured === true ? styles.badgeFeatured : ''}`}>
+                                            {service.featured === true ? 'نعم' : 'لا'}
                                         </span>
                                     </td>
                                     <td>
