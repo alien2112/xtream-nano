@@ -25,7 +25,8 @@ export default function SiteImagesPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState<string | null>(null);
     const [editingKey, setEditingKey] = useState<string | null>(null);
-    const [tempUrl, setTempUrl] = useState('');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     useEffect(() => {
         fetchImages();
@@ -33,15 +34,30 @@ export default function SiteImagesPage() {
 
     const fetchImages = async () => {
         try {
-            const res = await fetch('/api/site-images');
+            const res = await fetch('/api/site-images', {
+                cache: 'no-store',
+            });
             if (res.ok) {
                 const data = await res.json();
-                if (Array.isArray(data) && data.length > 0) {
-                    setImages(data);
+                if (Array.isArray(data)) {
+                    // If we have images from DB, use them, otherwise merge with defaults
+                    if (data.length > 0) {
+                        // Merge DB images with defaults to ensure all keys are present
+                        const dbImageMap = new Map(data.map(img => [img.key, img]));
+                        const merged = DEFAULT_IMAGES.map(defaultImg => 
+                            dbImageMap.get(defaultImg.key) || defaultImg
+                        );
+                        setImages(merged);
+                    } else {
+                        // No images in DB, use defaults
+                        setImages(DEFAULT_IMAGES);
+                    }
                 }
             }
         } catch (error) {
             console.error('Failed to fetch images:', error);
+            // On error, use defaults
+            setImages(DEFAULT_IMAGES);
         } finally {
             setLoading(false);
         }
@@ -49,26 +65,71 @@ export default function SiteImagesPage() {
 
     const handleEdit = (image: SiteImage) => {
         setEditingKey(image.key);
-        setTempUrl(image.url);
+        setSelectedFile(null);
+        setPreviewUrl(null);
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (!file.type.startsWith('image/')) {
+                alert('الرجاء اختيار ملف صورة');
+                return;
+            }
+            setSelectedFile(file);
+            const url = URL.createObjectURL(file);
+            setPreviewUrl(url);
+        }
     };
 
     const handleSave = async (key: string) => {
+        if (!selectedFile) {
+            alert('الرجاء اختيار ملف صورة');
+            return;
+        }
+
         setSaving(key);
         try {
+            // First, upload the file
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            const uploadRes = await fetch('/api/images/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!uploadRes.ok) {
+                throw new Error('فشل رفع الصورة');
+            }
+
+            const uploadData = await uploadRes.json();
+            const { fileId, url } = uploadData;
+
+            // Then, update the site image with the file ID
             const res = await fetch('/api/site-images', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ key, url: tempUrl }),
+                body: JSON.stringify({ key, imageFileId: fileId, url }),
             });
 
             if (res.ok) {
+                const updatedImage = await res.json();
                 setImages(images.map(img =>
-                    img.key === key ? { ...img, url: tempUrl } : img
+                    img.key === key ? { ...img, url: updatedImage.url || url, imageFileId: updatedImage.imageFileId } : img
                 ));
                 setEditingKey(null);
+                setSelectedFile(null);
+                if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl);
+                    setPreviewUrl(null);
+                }
+                // Refresh images to ensure we have the latest from DB
+                await fetchImages();
             }
         } catch (error) {
             console.error('Failed to save image:', error);
+            alert('فشل في حفظ الصورة');
         } finally {
             setSaving(null);
         }
@@ -76,7 +137,11 @@ export default function SiteImagesPage() {
 
     const handleCancel = () => {
         setEditingKey(null);
-        setTempUrl('');
+        setSelectedFile(null);
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+        }
     };
 
     const groupedImages = images.reduce((acc, img) => {
@@ -122,12 +187,28 @@ export default function SiteImagesPage() {
                                         {editingKey === image.key ? (
                                             <div className={styles.editForm}>
                                                 <input
-                                                    type="text"
-                                                    value={tempUrl}
-                                                    onChange={(e) => setTempUrl(e.target.value)}
-                                                    placeholder="رابط الصورة"
-                                                    className={styles.input}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleFileSelect}
+                                                    className={styles.fileInput}
+                                                    id={`file-input-${image.key}`}
                                                 />
+                                                <label 
+                                                    htmlFor={`file-input-${image.key}`}
+                                                    className={styles.fileInputLabel}
+                                                >
+                                                    <Upload size={16} />
+                                                    {selectedFile ? selectedFile.name : 'اختر ملف صورة'}
+                                                </label>
+                                                {previewUrl && (
+                                                    <div className={styles.previewContainer}>
+                                                        <img 
+                                                            src={previewUrl} 
+                                                            alt="Preview" 
+                                                            className={styles.previewImage}
+                                                        />
+                                                    </div>
+                                                )}
                                                 <div className={styles.editActions}>
                                                     <button
                                                         onClick={handleCancel}
@@ -138,7 +219,7 @@ export default function SiteImagesPage() {
                                                     <button
                                                         onClick={() => handleSave(image.key)}
                                                         className={styles.saveButton}
-                                                        disabled={saving === image.key}
+                                                        disabled={saving === image.key || !selectedFile}
                                                     >
                                                         {saving === image.key ? (
                                                             <Loader2 size={16} className={styles.spinner} />

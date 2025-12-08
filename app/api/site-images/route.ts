@@ -23,7 +23,11 @@ const getCachedSiteImages = unstable_cache(
 export async function GET() {
     try {
         const images = await getCachedSiteImages();
-        return NextResponse.json(images);
+        return NextResponse.json(images, {
+            headers: {
+                'Cache-Control': 'public, s-maxage=14400, stale-while-revalidate=3600',
+            },
+        });
     } catch (error) {
         console.error('Failed to fetch site images:', error);
         return NextResponse.json({ error: 'فشل في جلب صور الموقع' }, { status: 500 });
@@ -33,15 +37,39 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
     try {
         await connectDB();
-        const { key, url, imageFileId } = await req.json();
+        const { key, url, imageFileId, label, description, section } = await req.json();
 
         if (!key) {
             return NextResponse.json({ error: 'المفتاح مطلوب' }, { status: 400 });
         }
 
-        const updateData: any = { url, updatedAt: new Date() };
+        // Check if image exists
+        const existing = await SiteImage.findOne({ key }).lean();
+        
+        const updateData: any = { 
+            updatedAt: new Date() 
+        };
+        
+        // If imageFileId is provided, use it and construct URL
         if (imageFileId) {
             updateData.imageFileId = imageFileId;
+            updateData.url = `/api/images/${imageFileId}`;
+        } else if (url) {
+            updateData.url = url;
+            // Clear imageFileId if we're using a URL instead
+            updateData.imageFileId = null;
+        }
+        
+        // Preserve or update other fields
+        if (label) updateData.label = label;
+        if (description !== undefined) updateData.description = description;
+        if (section) updateData.section = section;
+        
+        // If upserting and fields are missing, use defaults from existing or set defaults
+        if (!existing) {
+            if (!updateData.label) updateData.label = key;
+            if (!updateData.section) updateData.section = 'عام';
+            updateData.createdAt = new Date();
         }
 
         const image = await SiteImage.findOneAndUpdate(
@@ -51,15 +79,50 @@ export async function PUT(req: NextRequest) {
         ).lean();
 
         // Invalidate cache
-        revalidateTag('site-images', 'max');
+        revalidateTag('site-images');
 
         return NextResponse.json({
             ...image,
             _id: (image as any)._id.toString(),
+            url: (image as any).imageFileId ? `/api/images/${(image as any).imageFileId}` : (image as any).url,
         });
     } catch (error) {
         console.error('Failed to update site image:', error);
         return NextResponse.json({ error: 'فشل في تحديث الصورة' }, { status: 500 });
+    }
+}
+
+export async function POST(req: NextRequest) {
+    try {
+        await connectDB();
+        const body = await req.json();
+        const { key, url, imageFileId, label, description, section } = body;
+
+        if (!key) {
+            return NextResponse.json({ error: 'المفتاح مطلوب' }, { status: 400 });
+        }
+
+        const image = await SiteImage.create({
+            key,
+            url,
+            imageFileId,
+            label,
+            description,
+            section,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        }) as any;
+
+        // Invalidate cache
+        revalidateTag('site-images');
+
+        return NextResponse.json({
+            ...image.toObject(),
+            _id: image._id.toString(),
+        }, { status: 201 });
+    } catch (error) {
+        console.error('Failed to create site image:', error);
+        return NextResponse.json({ error: 'فشل في إنشاء الصورة' }, { status: 500 });
     }
 }
 
@@ -76,7 +139,7 @@ export async function DELETE(req: NextRequest) {
         await SiteImage.findOneAndDelete({ key });
 
         // Invalidate cache
-        revalidateTag('site-images', 'max');
+        revalidateTag('site-images');
 
         return NextResponse.json({ success: true });
     } catch (error) {
