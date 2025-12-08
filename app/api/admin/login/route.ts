@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
             const response = NextResponse.json({ success: true });
             
             // Cookie settings optimized for Vercel
-            const isProduction = process.env.VERCEL || process.env.NODE_ENV === 'production';
+            const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL);
             
             // Simple session cookie - no JWT needed
             response.cookies.set('admin_token', 'authenticated', {

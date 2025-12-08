@@ -9,7 +9,7 @@ export async function POST() {
         const response = NextResponse.json({ success: true });
         
         // Delete cookie with same settings as login
-        const isProduction = process.env.VERCEL || process.env.NODE_ENV === 'production';
+        const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL);
         
         response.cookies.set('admin_token', '', {
             httpOnly: true,
