@@ -32,8 +32,9 @@ if (mongoose.models.Blog) {
     // Check if schema has changed (old schema had title/description, new doesn't)
     if (existingSchema?.paths?.title || existingSchema?.paths?.description) {
         delete mongoose.models.Blog;
-        if (mongoose.modelSchemas && mongoose.modelSchemas.Blog) {
-            delete mongoose.modelSchemas.Blog;
+        const mongooseAny = mongoose as any;
+        if (mongooseAny.modelSchemas && mongooseAny.modelSchemas.Blog) {
+            delete mongooseAny.modelSchemas.Blog;
         }
     }
 }

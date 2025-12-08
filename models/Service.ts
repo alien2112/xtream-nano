@@ -52,8 +52,9 @@ if (mongoose.models.Service) {
     // Check if schema has changed (old schema had title/description, new doesn't)
     if (existingSchema?.paths?.title || existingSchema?.paths?.description) {
         delete mongoose.models.Service;
-        if (mongoose.modelSchemas && mongoose.modelSchemas.Service) {
-            delete mongoose.modelSchemas.Service;
+        const mongooseAny = mongoose as any;
+        if (mongooseAny.modelSchemas && mongooseAny.modelSchemas.Service) {
+            delete mongooseAny.modelSchemas.Service;
         }
     }
 }
