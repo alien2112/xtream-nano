@@ -141,6 +141,19 @@ export default function ServicesPage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('الرجاء اختيار ملف صورة');
+            return;
+        }
+
+        // Validate file size (max 10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            alert('حجم الملف يتجاوز 10 ميجابايت');
+            return;
+        }
+
         setUploadingImage(true);
         try {
             const uploadFormData = new FormData();
@@ -153,18 +166,28 @@ export default function ServicesPage() {
 
             if (res.ok) {
                 const data = await res.json();
+                console.log('Upload response:', data);
+                
+                if (!data.fileId) {
+                    throw new Error('فشل في الحصول على معرف الملف');
+                }
+
+                const imageUrl = data.url || `/api/images/${data.fileId}`;
                 setFormData(prev => ({
                     ...prev,
                     imageFileId: data.fileId,
-                    image: data.url,
+                    image: imageUrl,
                 }));
-                setImagePreview(data.url);
+                setImagePreview(imageUrl);
             } else {
-                alert('فشل رفع الصورة');
+                const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+                console.error('Upload error:', errorData);
+                throw new Error(errorData.error || 'فشل رفع الصورة');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to upload image:', error);
-            alert('فشل رفع الصورة');
+            const errorMessage = error?.message || 'فشل رفع الصورة';
+            alert(`فشل رفع الصورة: ${errorMessage}`);
         } finally {
             setUploadingImage(false);
         }

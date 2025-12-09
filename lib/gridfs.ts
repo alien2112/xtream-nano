@@ -6,23 +6,46 @@ let cachedClient: MongoClient | null = null;
 let cachedBucket: GridFSBucket | null = null;
 
 async function getGridFSBucket(): Promise<GridFSBucket> {
-    if (cachedBucket) {
-        return cachedBucket;
+    if (cachedBucket && cachedClient) {
+        // Check if connection is still alive
+        try {
+            await cachedClient.db().admin().ping();
+            return cachedBucket;
+        } catch (error) {
+            // Connection is dead, reset cache
+            console.warn('GridFS connection lost, reconnecting...');
+            cachedBucket = null;
+            if (cachedClient) {
+                try {
+                    await cachedClient.close();
+                } catch (e) {
+                    // Ignore close errors
+                }
+                cachedClient = null;
+            }
+        }
     }
 
     if (!MONGODB_URI) {
         throw new Error('MONGODB_URI not defined');
     }
 
-    if (!cachedClient) {
-        cachedClient = new MongoClient(MONGODB_URI);
-        await cachedClient.connect();
+    try {
+        if (!cachedClient) {
+            cachedClient = new MongoClient(MONGODB_URI);
+            await cachedClient.connect();
+        }
+
+        const db = cachedClient.db();
+        cachedBucket = new GridFSBucket(db, { bucketName: 'images' });
+
+        return cachedBucket;
+    } catch (error) {
+        console.error('Failed to connect to MongoDB for GridFS:', error);
+        cachedClient = null;
+        cachedBucket = null;
+        throw error;
     }
-
-    const db = cachedClient.db();
-    cachedBucket = new GridFSBucket(db, { bucketName: 'images' });
-
-    return cachedBucket;
 }
 
 export async function uploadToGridFS(
@@ -30,24 +53,34 @@ export async function uploadToGridFS(
     filename: string,
     contentType: string
 ): Promise<string> {
-    const bucket = await getGridFSBucket();
+    try {
+        const bucket = await getGridFSBucket();
 
-    return new Promise((resolve, reject) => {
-        const uploadStream = bucket.openUploadStream(filename, {
-            metadata: {
-                contentType,
-                uploadedAt: new Date(),
-            },
+        return new Promise((resolve, reject) => {
+            const uploadStream = bucket.openUploadStream(filename, {
+                metadata: {
+                    contentType,
+                    uploadedAt: new Date(),
+                },
+            });
+
+            uploadStream.on('finish', () => {
+                const fileId = uploadStream.id.toString();
+                console.log('File uploaded successfully:', fileId);
+                resolve(fileId);
+            });
+
+            uploadStream.on('error', (error) => {
+                console.error('Upload stream error:', error);
+                reject(error);
+            });
+
+            uploadStream.end(buffer);
         });
-
-        uploadStream.on('finish', () => {
-            resolve(uploadStream.id.toString());
-        });
-
-        uploadStream.on('error', reject);
-
-        uploadStream.end(buffer);
-    });
+    } catch (error) {
+        console.error('Error in uploadToGridFS:', error);
+        throw error;
+    }
 }
 
 export async function getFromGridFS(fileId: string): Promise<{ buffer: Buffer; contentType: string; filename: string } | null> {

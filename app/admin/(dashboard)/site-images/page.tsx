@@ -111,13 +111,17 @@ export default function SiteImagesPage() {
             });
 
             if (!uploadRes.ok) {
-                throw new Error('فشل رفع الصورة');
+                const errorData = await uploadRes.json().catch(() => ({ error: 'Unknown error' }));
+                console.error('Upload error:', errorData);
+                throw new Error(errorData.error || 'فشل رفع الصورة');
             }
 
             const uploadData = await uploadRes.json();
+            console.log('Upload response:', uploadData);
             const { fileId } = uploadData;
 
             if (!fileId) {
+                console.error('No fileId in response:', uploadData);
                 throw new Error('فشل في الحصول على معرف الملف');
             }
 
@@ -157,9 +161,10 @@ export default function SiteImagesPage() {
                 const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
                 throw new Error(errorData.error || 'فشل في حفظ الصورة');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to save image:', error);
-            alert('فشل في حفظ الصورة');
+            const errorMessage = error?.message || 'فشل في حفظ الصورة';
+            alert(`فشل في حفظ الصورة: ${errorMessage}`);
         } finally {
             setSaving(null);
         }
